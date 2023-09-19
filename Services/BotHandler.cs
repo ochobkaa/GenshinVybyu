@@ -44,7 +44,7 @@ namespace GenshinVybyu.Services
         // Process Inline Keyboard callback data
         private async Task _OnCallbackQueryReceived(CallbackQuery callbackQuery, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Received inline keyboard callback from: {CallbackQueryId}", callbackQuery.Id);
+            _logger.LogDebug("Received inline keyboard callback from: {CallbackQueryId}", callbackQuery.Id);
 
             await _client.AnswerCallbackQueryAsync(
                 callbackQueryId: callbackQuery.Id,

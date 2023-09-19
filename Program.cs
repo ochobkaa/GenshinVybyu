@@ -1,16 +1,25 @@
 ﻿using GenshinVybyu;
 using GenshinVybyu.Types;
 using GenshinVybyu.Services;
+using GenshinVybyu.Services.Interfaces;
 using GenshinVybyu.Controllers;
 using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Setup Bot configuration
+var webhookConfigurationSection = builder.Configuration.GetSection(WebhookConfiguration.Configuration);
 var botConfigurationSection = builder.Configuration.GetSection(BotConfiguration.Configuration);
-builder.Services.Configure<BotConfiguration>(botConfigurationSection);
+var sensitiveData = GetSensitiveData.LoadData();
 
-var botConfiguration = botConfigurationSection.Get<BotConfiguration>();
+builder.Services.Configure<WebhookConfiguration>(webhookConfigurationSection)
+                .Configure<BotConfiguration>(botConfigurationSection)
+                .Configure<SensitiveData>(sd => {
+                    sd.BotToken = sensitiveData.BotToken;
+                    sd.SecretToken = sensitiveData.BotToken;
+                });
+
+var webhookConfiguration = webhookConfigurationSection.Get<WebhookConfiguration>();
 
 // Register named HttpClient to get benefits of IHttpClientFactory
 // and consume it with ITelegramBotClient typed client.
@@ -20,13 +29,14 @@ var botConfiguration = botConfigurationSection.Get<BotConfiguration>();
 builder.Services.AddHttpClient("telegram_bot_client")
                 .AddTypedClient<ITelegramBotClient>((httpClient, sp) =>
                 {
-                    BotConfiguration? botConfig = sp.GetConfiguration<BotConfiguration>();
-                    TelegramBotClientOptions options = new(botConfig.BotToken);
+                    WebhookConfiguration? webhookConfig = sp.GetConfiguration<WebhookConfiguration>();
+                    TelegramBotClientOptions options = new(sensitiveData.BotToken);
                     return new TelegramBotClient(options, httpClient);
                 });
 
-// Dummy business-logic service
-builder.Services.AddScoped<BotHandler>();
+// Dummy business-logic services
+builder.Services.AddScoped<IBotHandler, BotHandler>()
+                .AddTransient<ILoadModel, LoadModel>();
 
 // There are several strategies for completing asynchronous tasks during startup.
 // Some of them could be found in this article https://andrewlock.net/running-async-tasks-on-app-startup-in-asp-net-core-part-1/
@@ -44,6 +54,6 @@ builder.Services
 var app = builder.Build();
 // Construct webhook route from the Route configuration parameter
 // It is expected that BotController has single method accepting Update
-app.MapBotWebhookRoute<BotController>(route: botConfiguration.Route);
+app.MapBotWebhookRoute<BotController>(route: webhookConfiguration.Route);
 app.MapControllers();
 app.Run();

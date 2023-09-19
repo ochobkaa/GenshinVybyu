@@ -10,16 +10,19 @@ namespace GenshinVybyu.Services
     {
         private readonly ILogger<ConfigureWebhook> _logger;
         private readonly IServiceProvider _serviceProvider;
-        private readonly BotConfiguration _botConfig;
+        private readonly WebhookConfiguration _webhookConfig;
+        private readonly SensitiveData _sensitiveData;
 
         public ConfigureWebhook(
             ILogger<ConfigureWebhook> logger,
             IServiceProvider serviceProvider,
-            IOptions<BotConfiguration> botOptions)
+            IOptions<WebhookConfiguration> webhookConfig,
+            IOptions<SensitiveData> sensitiveData)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
-            _botConfig = botOptions.Value;
+            _webhookConfig = webhookConfig.Value;
+            _sensitiveData = sensitiveData.Value;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -32,12 +35,15 @@ namespace GenshinVybyu.Services
             // If you'd like to make sure that the webhook was set by you, you can specify secret data
             // in the parameter secret_token. If specified, the request will contain a header
             // "X-Telegram-Bot-Api-Secret-Token" with the secret token as content.
-            var webhookAddress = $"{_botConfig.HostAddress}{_botConfig.Route}";
+
+            var webhookAddress = $"{_webhookConfig.HostAddress}{_webhookConfig.Route}";
+
             _logger.LogInformation("Setting webhook: {WebhookAddress}", webhookAddress);
+
             await botClient.SetWebhookAsync(
                 url: webhookAddress,
                 allowedUpdates: Array.Empty<UpdateType>(),
-                secretToken: _botConfig.SecretToken,
+                secretToken: _sensitiveData.SecretToken,
                 cancellationToken: cancellationToken);
         }
 

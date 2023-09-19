@@ -1,5 +1,5 @@
 ﻿using GenshinVybyu.Controllers.Attributes;
-using GenshinVybyu.Services;
+using GenshinVybyu.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Telegram.Bot.Types;
 
@@ -11,7 +11,7 @@ namespace GenshinVybyu.Controllers
         [ValidateTelegramBot]
         public async Task<IActionResult> Post(
             [FromBody] Update update,
-            [FromServices] BotHandler handler,
+            [FromServices] IBotHandler handler,
             CancellationToken cancellationToken)
         {
             await handler.HandleUpdateAsync(update, cancellationToken);

@@ -1,6 +1,6 @@
 ﻿namespace GenshinVybyu.Services.Interfaces
 {
-    public interface IConfigureWebhook : IHostedService
+    public interface IConfigureWebhook : IService, IHostedService
     {
         
     }

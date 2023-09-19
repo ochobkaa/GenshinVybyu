@@ -17,10 +17,9 @@ namespace GenshinVybyu.Controllers.Attributes
         {
             private readonly string _secretToken;
 
-            public ValidateTelegramBotFilter(IOptions<BotConfiguration> options)
+            public ValidateTelegramBotFilter(IOptions<SensitiveData> data)
             {
-                var botConfiguration = options.Value;
-                _secretToken = botConfiguration.SecretToken;
+                _secretToken = data.Value.SecretToken;
             }
 
             public void OnActionExecuted(ActionExecutedContext context)
