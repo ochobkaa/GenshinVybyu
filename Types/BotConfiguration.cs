@@ -9,5 +9,7 @@
         public int RollPrimogemsCost { get; set; } = default!;
         public int CharPity { get; set; } = default!;
         public int WeaponPity { get; set; } = default!;
+        public string CommandPrefix { get; set; } = default!;
+        public string KeyAttrValuePrefix { get; set; } = default!;
     }
 }

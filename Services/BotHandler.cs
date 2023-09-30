@@ -8,12 +8,18 @@ namespace GenshinVybyu.Services
 {
     public class BotHandler : IBotHandler
     {
-        private readonly ITelegramBotClient _client;
+        private readonly IActionsHandler<Message> _messageHandler;
+        private readonly IActionsHandler<CallbackQuery> _cbQueryHandler;
         private readonly ILogger _logger;
 
-        public BotHandler(ITelegramBotClient client, ILogger logger)
+        public BotHandler(
+            IActionsHandler<Message> messageHandler,
+            IActionsHandler<CallbackQuery> cbQueryHandler,
+            ILogger logger
+        )
         {
-            _client = client;
+            _messageHandler = messageHandler;
+            _cbQueryHandler = cbQueryHandler;
             _logger = logger;
         }
 
@@ -38,7 +44,7 @@ namespace GenshinVybyu.Services
             if (message.Text is not { } messageText)
                 return;
 
-
+            await _messageHandler.Handle(message, cancellationToken);
         }
 
         // Process Inline Keyboard callback data
@@ -46,55 +52,30 @@ namespace GenshinVybyu.Services
         {
             _logger.LogDebug("Received inline keyboard callback from: {CallbackQueryId}", callbackQuery.Id);
 
-            await _client.AnswerCallbackQueryAsync(
-                callbackQueryId: callbackQuery.Id,
-                text: $"Received {callbackQuery.Data}",
-                cancellationToken: cancellationToken);
-
-            await _client.SendTextMessageAsync(
-                chatId: callbackQuery.Message!.Chat.Id,
-                text: $"Received {callbackQuery.Data}",
-                cancellationToken: cancellationToken);
+            await _cbQueryHandler.Handle(callbackQuery, cancellationToken);
         }
-
-        #region Inline Mode
 
         private async Task _OnInlineQueryReceived(InlineQuery inlineQuery, CancellationToken cancellationToken)
         {
+            // пока что TODO
             _logger.LogDebug("Received inline query from: {InlineQueryFromId}", inlineQuery.From.Id);
 
-            InlineQueryResult[] results = {
-            // displayed result
-            new InlineQueryResultArticle(
-                id: "1",
-                title: "TgBots",
-                inputMessageContent: new InputTextMessageContent("hello"))
-        };
-
-            await _client.AnswerInlineQueryAsync(
-                inlineQueryId: inlineQuery.Id,
-                results: results,
-                cacheTime: 0,
-                isPersonal: true,
-                cancellationToken: cancellationToken);
+            await Task.CompletedTask;
         }
 
         private async Task _OnChosenInlineResultReceived(ChosenInlineResult chosenInlineResult, CancellationToken cancellationToken)
         {
+            // пока что TODO
             _logger.LogDebug("Received inline result: {ChosenInlineResultId}", chosenInlineResult.ResultId);
 
-            await _client.SendTextMessageAsync(
-                chatId: chosenInlineResult.From.Id,
-                text: $"You chose result with Id: {chosenInlineResult.ResultId}",
-                cancellationToken: cancellationToken);
+            await Task.CompletedTask;
         }
 
-        #endregion
-
-        private Task _UnknownUpdateHandlerAsync(Update update, CancellationToken cancellationToken)
+        private async Task _UnknownUpdateHandlerAsync(Update update, CancellationToken cancellationToken)
         {
             _logger.LogDebug("Unknown update type: {UpdateType}", update.Type);
-            return Task.CompletedTask;
+
+            await Task.CompletedTask;
         }
 
         public async Task HandlePollingErrorAsync(Exception exception, CancellationToken cancellationToken)

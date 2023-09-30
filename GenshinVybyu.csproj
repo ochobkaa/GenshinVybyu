@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <Folder Include="ModelData\" />
+    <Folder Include="Services\Utility\" />
   </ItemGroup>
 
   <ItemGroup>

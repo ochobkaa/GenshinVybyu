@@ -4,6 +4,7 @@ using GenshinVybyu.Services;
 using GenshinVybyu.Services.Interfaces;
 using GenshinVybyu.Controllers;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,8 +36,14 @@ builder.Services.AddHttpClient("telegram_bot_client")
                 });
 
 // Dummy business-logic services
-builder.Services.AddScoped<IBotHandler, BotHandler>()
-                .AddTransient<ILoadModel, LoadModel>();
+builder.Services.AddSingleton<IActionsCollection, ActionsCollection>()
+                .AddTransient<ILoadModel, LoadModel>()
+                .AddTransient<IModelCalc, ModelCalc>()
+                .AddScoped<ICommandParser, CommandParser>()
+                .AddScoped<IActionsHandler<Message>, MessageActionsHandler>()
+                .AddScoped<IActionsHandler<CallbackQuery>, CallbackActionsHandler>()
+                .AddScoped<IActionExecutor, ActionExecutor>()
+                .AddScoped<IBotHandler, BotHandler>();
 
 // There are several strategies for completing asynchronous tasks during startup.
 // Some of them could be found in this article https://andrewlock.net/running-async-tasks-on-app-startup-in-asp-net-core-part-1/
@@ -56,4 +63,5 @@ var app = builder.Build();
 // It is expected that BotController has single method accepting Update
 app.MapBotWebhookRoute<BotController>(route: webhookConfiguration.Route);
 app.MapControllers();
+app.MapActions<IActionsCollection>();
 app.Run();
