@@ -57,7 +57,7 @@ namespace GenshinVybyu.Services
             ActionArgs actionArgs = new()
             {
                 Args = args,
-                KWArgs = kwArgs
+                KwArgs = kwArgs
             };
 
             return actionArgs;

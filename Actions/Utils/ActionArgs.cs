@@ -7,10 +7,10 @@ namespace GenshinVybyu.Actions.Utils
         public static ActionArgs Empty => new()
         {
             Args = new List<string>(),
-            KWArgs = new Dictionary<string, string>()
+            KwArgs = new Dictionary<string, string>()
         };
 
         public IList<string> Args { get; init; }
-        public IDictionary<string, string> KWArgs { get; init; }
+        public IDictionary<string, string> KwArgs { get; init; }
     }
 }
