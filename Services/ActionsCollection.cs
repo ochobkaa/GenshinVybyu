@@ -21,7 +21,8 @@ namespace GenshinVybyu.Services
         {
             string cmdToken = command.CommandToken;
             IBotAction action = _actionBinds.FirstOrDefault(
-                a => a.Key.Tokens.Any(t => t == cmdToken)
+                a => a.Key.Name == cmdToken 
+                || a.Key.Tokens.Any(t => t == cmdToken)
             ).Value;
 
             return action;
