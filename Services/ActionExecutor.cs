@@ -10,20 +10,23 @@ namespace GenshinVybyu.Services
 {
     public class ActionExecutor : IActionExecutor
     {
-        private readonly ITelegramBotClient _client;
+        private readonly IBotOutput _output;
         private readonly IModelCalc _calc;
+        private readonly IChatStateActions _state;
         private readonly BotConfiguration _conf;
         private readonly ILogger _logger;
 
         public ActionExecutor(
-            ITelegramBotClient client,
+            IBotOutput output,
             IModelCalc calc,
+            IChatStateActions state,
             IOptions<BotConfiguration> options,
-            ILogger logger
+            ILogger<ActionExecutor> logger
         )
         {
-            _client = client;
+            _output = output;
             _calc = calc;
+            _state = state;
             _conf = options.Value;
             _logger = logger;
         }
@@ -43,8 +46,9 @@ namespace GenshinVybyu.Services
         {
             var context = new ActionContext()
             {
-                Client = _client,
+                Output = _output,
                 ModelCalc = _calc,
+                State = _state,
                 ChatId = chatId,
                 ActionArgs = args,
                 Configuration = _conf,

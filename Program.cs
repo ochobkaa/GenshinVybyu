@@ -12,12 +12,19 @@ var builder = WebApplication.CreateBuilder(args);
 var webhookConfigurationSection = builder.Configuration.GetSection(WebhookConfiguration.Configuration);
 var botConfigurationSection = builder.Configuration.GetSection(BotConfiguration.Configuration);
 var sensitiveData = GetSensitiveData.LoadData();
+var messagesConfig = GetMessagesConfig.LoadMessages();
 
 builder.Services.Configure<WebhookConfiguration>(webhookConfigurationSection)
                 .Configure<BotConfiguration>(botConfigurationSection)
-                .Configure<SensitiveData>(sd => {
+                .Configure<SensitiveData>(sd =>
+                {
                     sd.BotToken = sensitiveData.BotToken;
-                    sd.SecretToken = sensitiveData.BotToken;
+                    sd.SecretToken = sensitiveData.SecretToken;
+                })
+                .Configure<MessagesConfig>(mc =>
+                {
+                    mc.Splashes = messagesConfig.Splashes;
+                    mc.Messages = messagesConfig.Messages;
                 });
 
 var webhookConfiguration = webhookConfigurationSection.Get<WebhookConfiguration>();
@@ -36,27 +43,28 @@ builder.Services.AddHttpClient("telegram_bot_client")
                 });
 
 // Dummy business-logic services
-builder.Services.AddSingleton<IActionsCollection, ActionsCollection>()
-                .AddTransient<ILoadModel, LoadModel>()
-                .AddTransient<IModelCalc, ModelCalc>()
-                .AddScoped<ICommandParser, CommandParser>()
-                .AddScoped<IActionsHandler<Message>, MessageActionsHandler>()
-                .AddScoped<IActionsHandler<CallbackQuery>, CallbackActionsHandler>()
-                .AddScoped<IActionExecutor, ActionExecutor>()
-                .AddScoped<IBotHandler, BotHandler>();
+
+builder.Services
+    .AddModelCalc()
+    .AddState()
+    .AddHandlingPipeline()
+    .AddBotOutput()
+    .AddUtility();
 
 // There are several strategies for completing asynchronous tasks during startup.
 // Some of them could be found in this article https://andrewlock.net/running-async-tasks-on-app-startup-in-asp-net-core-part-1/
 // We are going to use IHostedService to add and later remove Webhook
 builder.Services.AddHostedService<ConfigureWebhook>();
 
+builder.Services.AddLogging();
+builder.Services.AddRedis(sensitiveData);
+
 // The Telegram.Bot library heavily depends on Newtonsoft.Json library to deserialize
 // incoming webhook updates and send serialized responses back.
 // Read more about adding Newtonsoft.Json to ASP.NET Core pipeline:
 //   https://docs.microsoft.com/en-us/aspnet/core/web-api/advanced/formatting?view=aspnetcore-6.0#add-newtonsoftjson-based-json-format-support
 builder.Services
-    .AddControllers()
-    .AddNewtonsoftJson();
+    .AddControllers();
 
 var app = builder.Build();
 // Construct webhook route from the Route configuration parameter

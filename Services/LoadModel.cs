@@ -1,6 +1,7 @@
 ﻿using GenshinVybyu.Services.Interfaces;
 using GenshinVybyu.Types;
 using GenshinVybyu.Exceptions;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace GenshinVybyu.Services
@@ -10,9 +11,9 @@ namespace GenshinVybyu.Services
         private readonly BotConfiguration _botConf;
         private readonly ILogger _logger;
 
-        public LoadModel(BotConfiguration botConf, ILogger logger)
+        public LoadModel(IOptions<BotConfiguration> botConf, ILogger<LoadModel> logger)
         {
-            _botConf = botConf;
+            _botConf = botConf.Value;
             _logger = logger;
         }
 

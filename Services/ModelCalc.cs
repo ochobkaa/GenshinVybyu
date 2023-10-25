@@ -7,12 +7,12 @@ namespace GenshinVybyu.Services
 {
     public class ModelCalc : IModelCalc
     {
-        private readonly ILoadModel _loader;
+        private readonly IModelsCollection _models;
         private readonly BotConfiguration _conf;
 
-        public ModelCalc(ILoadModel loader, IOptions<BotConfiguration> conf)
+        public ModelCalc(IModelsCollection models, IOptions<BotConfiguration> conf)
         {
-            _loader = loader;
+            _models = models;
             _conf = conf.Value;
         }
 
@@ -44,7 +44,7 @@ namespace GenshinVybyu.Services
 
         public async Task<double> GetProbability(int rolls, bool fiftyfifty, int consts, int refines, int primogems=0)
         {
-            ModelData modelData = await _loader.Load(fiftyfifty, consts, refines);
+            ModelData modelData = await _models.GetModelData(fiftyfifty, consts, refines);
 
             int rollsInPrimogems = RollsFromPrimogems(primogems);
             int totalRolls = rolls + rollsInPrimogems;
@@ -59,7 +59,7 @@ namespace GenshinVybyu.Services
             if (prob > 1 && prob < 0) 
                 throw new VybyuBotException("Probability value is greater than 1 or negative");
 
-            ModelData modelData = await _loader.Load(fiftyfifty, consts, refines);
+            ModelData modelData = await _models.GetModelData(fiftyfifty, consts, refines);
 
             int start = 0;
             int end = modelData.Polynomes.Last().End;

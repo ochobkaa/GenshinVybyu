@@ -15,7 +15,7 @@ namespace GenshinVybyu.Services
         public BotHandler(
             IActionsHandler<Message> messageHandler,
             IActionsHandler<CallbackQuery> cbQueryHandler,
-            ILogger logger
+            ILogger<BotHandler> logger
         )
         {
             _messageHandler = messageHandler;

@@ -8,12 +8,14 @@ namespace GenshinVybyu.Actions.Attributes
     {
         public ActionCommand Command { get; init; }
 
-        public BotActionAttribute(string name, IEnumerable<string> tokens)
+        public BotActionAttribute(string name, string tokens)
         {
+            var splittedTokens = tokens.Split(" ");
+
             Command = new()
             {
                 Name = name,
-                Tokens = tokens
+                Tokens = splittedTokens
             };
         }
     }

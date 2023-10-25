@@ -19,7 +19,7 @@ namespace GenshinVybyu.Services
 
         public IBotAction? GetAction(ParsedCommand command)
         {
-            string cmdToken = command.CommandToken;
+            string cmdToken = command.Token;
             IBotAction action = _actionBinds.FirstOrDefault(
                 a => a.Key.Name == cmdToken 
                 || a.Key.Tokens.Any(t => t == cmdToken)

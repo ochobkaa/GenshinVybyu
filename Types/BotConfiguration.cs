@@ -11,5 +11,6 @@
         public int WeaponPity { get; set; } = default!;
         public string CommandPrefix { get; set; } = default!;
         public string KeyAttrValuePrefix { get; set; } = default!;
+        public double SplashProb { get; set; } = default!;
     }
 }

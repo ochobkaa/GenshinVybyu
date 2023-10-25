@@ -57,7 +57,7 @@ namespace GenshinVybyu.Services
             ActionArgs actionArgs = new()
             {
                 Args = args,
-                KwArgs = kwArgs
+                KwArgs = kwArgs,
             };
 
             return actionArgs;
@@ -76,8 +76,10 @@ namespace GenshinVybyu.Services
 
             var parsedCommand = new ParsedCommand()
             {
-                CommandToken = commandToken,
-                Args = args ?? ActionArgs.Empty
+                Token = commandToken,
+                Args = args ?? ActionArgs.Empty,
+                CommandPrefix = _conf.CommandPrefix,
+                KeyAttrValuePrefix = _conf.KeyAttrValuePrefix
             };
 
             return parsedCommand;

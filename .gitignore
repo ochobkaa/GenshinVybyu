@@ -3,3 +3,4 @@ obj
 bin
 sensitive.json
 ModelData
+*.env

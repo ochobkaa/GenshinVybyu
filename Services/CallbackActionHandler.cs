@@ -9,7 +9,7 @@ namespace GenshinVybyu.Services
             IActionsCollection actions,
             IActionExecutor executor,
             ICommandParser parser,
-            ILogger logger
+            ILogger<CallbackActionsHandler> logger
         ) : base(actions, executor, parser, logger) { }
 
         public override async Task Handle(CallbackQuery cbQuery, CancellationToken cancellationToken)

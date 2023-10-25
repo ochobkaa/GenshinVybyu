@@ -10,5 +10,11 @@ namespace GenshinVybyu.Types
 
         [JsonProperty(Required = Required.Always)]
         public string SecretToken { get; set; }
+
+        [JsonProperty(Required = Required.Always)]
+        public string UserHashSeed { get; set; }
+
+        [JsonProperty(Required = Required.Always)]
+        public string RedisConnectionString { get; set; }
     }
 }
