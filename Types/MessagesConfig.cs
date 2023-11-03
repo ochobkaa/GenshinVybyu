@@ -6,6 +6,9 @@ namespace GenshinVybyu.Types
     public class MessagesConfig
     {
         [JsonProperty(Required = Required.Always)]
+        public RollsDataFormat RollsDataFormat { get; set; }
+
+        [JsonProperty(Required = Required.Always)]
         public IList<Splash> Splashes { get; set; }
 
         [JsonProperty(Required = Required.Always)]

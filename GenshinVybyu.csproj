@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Actions\InputActions\" />
     <Folder Include="ModelData\" />
     <Folder Include="Services\Utility\" />
   </ItemGroup>

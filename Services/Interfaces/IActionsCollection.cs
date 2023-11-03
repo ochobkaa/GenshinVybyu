@@ -6,7 +6,8 @@ namespace GenshinVybyu.Services.Interfaces
 {
     public interface IActionsCollection : IService
     {
-        public void Bind(ActionCommand actionCommand, IBotAction action);
+        public IActionsCollection Bind<TAction>()
+            where TAction : IBotAction, new();
         public IBotAction? GetAction(ParsedCommand command);
     }
 }

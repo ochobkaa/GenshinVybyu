@@ -27,10 +27,13 @@ namespace GenshinVybyu.Services
         public async Task Message(
             ChatId chatId, 
             string messageName, 
-            CancellationToken cancellationToken
+            CancellationToken cancellationToken,
+            bool addSplash = false,
+            IDictionary<string, string>? replaces = null,
+            RollsData? rollsData = null
         )
         {
-            BuildedMessage? buildedMsg = _builder.BuildMessage(messageName);
+            BuildedMessage? buildedMsg = _builder.BuildMessage(messageName, addSplash, replaces, rollsData);
 
             if (buildedMsg == null) return;
 

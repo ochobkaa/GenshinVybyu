@@ -1,4 +1,5 @@
-﻿using Telegram.Bot.Types;
+﻿using GenshinVybyu.Types;
+using Telegram.Bot.Types;
 
 namespace GenshinVybyu.Services.Interfaces
 {
@@ -7,7 +8,10 @@ namespace GenshinVybyu.Services.Interfaces
         public Task Message(
             ChatId chatId,
             string messageName,
-            CancellationToken cancellationToken
+            CancellationToken cancellationToken,
+            bool addSplash = false,
+            IDictionary<string, string>? replaces = null,
+            RollsData? rollsData = null
         );
     }
 }

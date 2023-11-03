@@ -10,16 +10,19 @@ namespace GenshinVybyu.Services
     public class MessageBuilder : IMessageBuilder
     {
         private readonly ISplashGenerator _splashes;
+        private readonly IMessageTextReplacer _replacer;
         private readonly BotConfiguration _botConf;
         private readonly MessagesConfig _msgConfig;
 
         public MessageBuilder(
             ISplashGenerator splashes,
+            IMessageTextReplacer replacer,
             IOptions<BotConfiguration> botConf,
             IOptions<MessagesConfig> msgConfig
         )
         {
             _splashes = splashes;
+            _replacer = replacer;
             _botConf = botConf.Value;
             _msgConfig = msgConfig.Value;
         }
@@ -96,14 +99,29 @@ namespace GenshinVybyu.Services
             return inlineKeyboard;
         }
 
-        public BuildedMessage? BuildMessage(string messageName, bool addSplash=false)
-        {
-            BotMessage? msg = _msgConfig.Messages
+        private BotMessage? MessageFromConfig(string messageName)
+            => _msgConfig.Messages
                 .FirstOrDefault(m => m.Name == messageName);
+
+        public BuildedMessage? BuildMessage(
+            string messageName,
+            bool addSplash,
+            IDictionary<string, string>? replaces,
+            RollsData? rollsData
+        )
+        {
+            BotMessage? msg = MessageFromConfig(messageName);
 
             if (msg == null) return null;
 
             string msgText = GetMessageText(msg, addSplash);
+
+            if (replaces != null && replaces.Count > 0)
+                msgText = _replacer.ReplaceText(msgText, replaces);
+
+            if (rollsData != null)
+                msgText = _replacer.InsertRollsData(msgText, rollsData);
+
             InlineKeyboardMarkup? msgKeyboard = GetKeyboard(msg);
 
             var buildedMsg = new BuildedMessage()

@@ -7,18 +7,10 @@ namespace GenshinVybyu.Actions
 {
     public abstract class ActionBase : IBotAction
     {
-        protected delegate bool ArgsCondition(ActionArgs args);
-        protected delegate Task OnFalseArgsConditionAction(
-            ActionContext actionContext,
-            CancellationToken cancellationToken
-        );
+        private List<IArgsChecker> _argsCheckers = new();
 
-        private class ArgsChecker { 
-            public ArgsCondition Condition { get; init; }
-            public OnFalseArgsConditionAction OnFalseAction { get; init; }
-        }
-
-        private List<ArgsChecker> _argsCheckers = new();
+        public abstract string Name { get; }
+        public virtual IEnumerable<string>? Tokens => null;
 
         public ActionBase()
         {
@@ -33,10 +25,10 @@ namespace GenshinVybyu.Actions
 
             foreach (var checker in _argsCheckers)
             {
-                bool match = checker.Condition(args);
+                bool match = checker.Check(args);
                 if (!match)
                 {
-                    await checker.OnFalseAction(actionContext, cancellationToken);
+                    await checker.OnFalse(actionContext, cancellationToken);
                     return false;
                 }
             }
@@ -44,13 +36,10 @@ namespace GenshinVybyu.Actions
             return true;
         }
 
-        protected void AddChecker(ArgsCondition condition, OnFalseArgsConditionAction onFalseCondition)
+        protected void AddChecker<TChecker>()
+            where TChecker : IArgsChecker, new()
         {
-            var checker = new ArgsChecker() 
-            { 
-                Condition = condition, 
-                OnFalseAction = onFalseCondition 
-            };
+            var checker = new TChecker();
 
             _argsCheckers.Add(checker);
         }

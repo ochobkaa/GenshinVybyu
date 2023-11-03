@@ -1,7 +1,9 @@
 ﻿using GenshinVybyu.Services.Interfaces;
 using GenshinVybyu.Actions.Interfaces;
 using GenshinVybyu.Actions.Utils;
+using GenshinVybyu.Types;
 using Telegram.Bot.Types;
+using Microsoft.Extensions.Options;
 
 namespace GenshinVybyu.Services
 {
@@ -11,6 +13,7 @@ namespace GenshinVybyu.Services
         private readonly IActionExecutor _executor;
         private readonly IChatStateActions _state;
         private readonly ICommandParser _parser;
+        private readonly BotConfiguration _conf;
         private readonly ILogger _logger;
 
         public ActionsHandlerBase(
@@ -18,6 +21,7 @@ namespace GenshinVybyu.Services
             IActionExecutor executor,
             IChatStateActions state,
             ICommandParser parser, 
+            IOptions<BotConfiguration> conf,
             ILogger logger
         )
         {
@@ -25,22 +29,25 @@ namespace GenshinVybyu.Services
             _executor = executor;
             _state = state;
             _parser = parser;
+            _conf = conf.Value;
             _logger = logger;
         }
 
         public abstract Task Handle(T obj, CancellationToken cancellationToken);
 
-        private ParsedCommand? ParseText(string mText)
+        private ParsedCommand? GetChainCommand(InputChainState chainState)
         {
-            ParsedCommand? command = _parser.ParseText(mText);
+            string chainName = chainState.Name;
+            int chainStep = chainState.Step;
+            string cPref = _conf.CommandPrefix;
+            string chainCommand = $"{cPref}{chainName} {chainStep}";
+
+            ParsedCommand? command = _parser.ParseText(chainCommand);
             return command;
         }
 
-        private async Task ParseAndHandleCommand(ChatId chatId, string mText, CancellationToken cancellationToken)
+        protected async Task HandleAction(ChatId chatId, ParsedCommand command, CancellationToken cancellationToken)
         {
-            ParsedCommand? command = ParseText(mText);
-            if (command == null) return;
-
             IBotAction? action = _actions.GetAction(command);
             if (action == null) return;
 
@@ -50,18 +57,19 @@ namespace GenshinVybyu.Services
 
         protected async Task HandleWithText(ChatId chatId, string mText, CancellationToken cancellationToken)
         {
-            string? commandStr = await _state.GetCommandString(chatId);
+            InputChainState? chainState = await _state.GetInputChain(chatId);
 
-            if (string.IsNullOrEmpty(commandStr))
-                await ParseAndHandleCommand(chatId, mText, cancellationToken);
-            
-            else
+            ParsedCommand? command = _parser.ParseText(mText);
+
+            if (command == null && chainState != null)
             {
-                string newCommandStr = $"{commandStr} {mText}";
-                await ParseAndHandleCommand(chatId, newCommandStr, cancellationToken);
+                command = GetChainCommand(chainState);
 
-                await _state.ClearCommandString(chatId);
+                await _state.NextParam(chatId, mText);
             }
+
+            if (command != null)
+                await HandleAction(chatId, command, cancellationToken);
         }
     }
 }

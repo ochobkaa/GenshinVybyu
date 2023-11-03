@@ -1,4 +1,11 @@
 {
+  "RollsDataFormat": {
+    "ConstsOnly": "C{consts} Созвездие песонажа при {fiftyFifty}",
+    "RefinesOnly": "R{refines} Пробуждение оружия",
+    "ConstsAndRefines": "C{consts} Созвездие персонажа и R{refines} Пробуждение оружия при {fiftyFifty}",
+    "FiftyFifty": "50/50",
+    "NoFiftyFifty": "стопроцентном гаранте"
+  },
   "Splashes": [
     {
       "Label": "сплеш1",
@@ -27,6 +34,139 @@
           "Command": "prob",
           "Args": [],
           "KwArgs": []
+        }
+      ]
+    },
+    {
+      "Name": "probability",
+      "Text": "Вероятность выбить {rollsData} за <b>{rolls} Молитв</b> и <b>{primos} Камней Истока</b> равна <b>{prob}%</b>"
+    },
+    {
+      "Name": "getConsts",
+      "Text": "Выберите Созвездие персонажа",
+      "Keyboard": [
+        {
+          "Type": "message",
+          "Label": "С0",
+          "Message": "c0"
+        },
+        {
+          "Type": "message",
+          "Label": "С1",
+          "Message": "c1"
+        },
+        {
+          "Type": "message",
+          "Label": "С2",
+          "Message": "c2"
+        },
+        {
+          "Type": "message",
+          "Label": "С3",
+          "Message": "c3"
+        },
+        {
+          "Type": "message",
+          "Label": "С4",
+          "Message": "c4"
+        },
+        {
+          "Type": "message",
+          "Label": "С5",
+          "Message": "c5"
+        },
+        {
+          "Type": "message",
+          "Label": "С6",
+          "Message": "c6"
+        },
+        {
+          "Type": "message",
+          "Label": "Только оружие",
+          "Message": "wo"
+        }
+      ]
+    },
+    {
+      "Name": "getRefines",
+      "Text": "Выберите Пробуждение оружия",
+      "Keyboard": [
+        {
+          "Type": "message",
+          "Label": "Без оружия",
+          "Message": "nw"
+        },
+        {
+          "Type": "message",
+          "Label": "R1",
+          "Message": "r1"
+        },
+        {
+          "Type": "message",
+          "Label": "R2",
+          "Message": "r2"
+        },
+        {
+          "Type": "message",
+          "Label": "R3",
+          "Message": "r3"
+        },
+        {
+          "Type": "message",
+          "Label": "R4",
+          "Message": "r4"
+        },
+        {
+          "Type": "message",
+          "Label": "R5",
+          "Message": "r5"
+        }
+      ]
+    },
+    {
+      "Name": "onFalseConstsRefines",
+      "Text": "Не выбрано ни количество Созвездий, ни количество Пробуждений оружия!",
+      "Keyboard": [
+
+      ]
+    },
+    {
+      "Name": "getPrimo",
+      "Text": "Введите количество Камней Истока",
+      "Keyboard": [
+        {
+          "Type": "message",
+          "Label": "Ввести количество Молитв",
+          "Message": 0
+        }
+      ]
+    },
+    {
+      "Name": "getRolls",
+      "Text": "Введите количество Молитв"
+    },
+    {
+      "Name": "onFalseRollsPrimo",
+      "Text": "Не введено ни количество Камней Истока, ни количество Молитв!"
+    },
+    {
+      "Name": "fiftyFifty",
+      "Text": "Предыдущий 5* персонаж был из текущего баннера или стандартный?",
+      "Keyboard": [
+        {
+          "Type": "message",
+          "Label": "Из баннера",
+          "Message": "ff"
+        },
+        {
+          "Type": "message",
+          "Label": "Стандартный",
+          "Message": "nff"
+        },
+        {
+          "Type": "message",
+          "Label": "Еще не крутил ни одного персонажа",
+          "Message": "ff"
         }
       ]
     }

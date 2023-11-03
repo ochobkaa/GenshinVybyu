@@ -6,9 +6,9 @@ namespace GenshinVybyu.Types
     public record class ChatState
     {
         [JsonProperty]
-        public string? Command { get; set; }
+        public InputChainState? InputChain { get; set; }
 
         [JsonProperty]
-        public string? SuperUser { get; set; }
+        public bool? SuperUser { get; set; }
     }
 }

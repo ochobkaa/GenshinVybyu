@@ -1,15 +1,15 @@
 ﻿using GenshinVybyu.Actions.Utils;
+using GenshinVybyu.Types;
 using Telegram.Bot.Types;
 
 namespace GenshinVybyu.Services.Interfaces
 {
     public interface IChatStateActions : IService
     {
-        public Task<string?> GetCommandString(ChatId chatId);
-        public Task<bool> SetCommandString(ChatId chatId, string command);
-        public Task<bool> SetCommandString(ChatId chatId, string token, ActionArgs args);
-        public Task<bool> AddArg(ChatId chatId, string argStr);
-        public Task<bool> ClearCommandString(ChatId chatId);
+        public Task<InputChainState?> GetInputChain(ChatId chatId);
+        public Task<bool> StartInputChain(ChatId chatId, string inputChainName);
+        public Task<bool> NextParam<TParam>(ChatId chatId, TParam param);
+        public Task<IList<string>?> FinishInputChain(ChatId chatId);
         public Task<bool> IsSuperUser(ChatId chatId);
         public Task<bool> EnableSuperUser(ChatId chatId);
         public Task<bool> DisableSuperUser(ChatId chatId);

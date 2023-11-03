@@ -42,6 +42,8 @@ namespace GenshinVybyu
         {
             services
                 .AddScoped<ISplashGenerator, SplashGenerator>()
+                .AddScoped<IRollsDataFormatter, RollsDataFormatter>()
+                .AddScoped<IMessageTextReplacer, MessageTextReplacer>()
                 .AddScoped<IMessageBuilder, MessageBuilder>()
                 .AddScoped<IBotOutput, BotOutput>();
 

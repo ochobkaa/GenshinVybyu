@@ -12,9 +12,19 @@ namespace GenshinVybyu.Services
     {
         private readonly Dictionary<ActionCommand, IBotAction> _actionBinds = new();
 
-        public void Bind(ActionCommand actionCommand, IBotAction action)
+        public IActionsCollection Bind<TAction>()
+            where TAction : IBotAction, new()
         {
+            TAction action = new();
+
+            ActionCommand actionCommand = new()
+            {
+                Name = action.Name,
+                Tokens = action.Tokens ?? new List<string>()
+            };
+
             _actionBinds.Add(actionCommand, action);
+            return this;
         }
 
         public IBotAction? GetAction(ParsedCommand command)

@@ -46,20 +46,55 @@ namespace GenshinVybyu.Services
             return success;
         }
 
-        public async Task<string?> GetCommandString(ChatId chatId)
+        private async Task<TOutput?> GetAndSetParam<TOutput>(
+            ChatId chatId, 
+            ParamGetter<TOutput> getter,
+            StateModifier modifier
+        )
         {
-            string? Getter(ChatState state) => state.Command;
+            var stateManager = _provider.GetService<IChatStateManager>();
+            ChatState? state = await stateManager.GetState(chatId);
 
-            string? command = await GetParam(chatId, Getter);
-            return command;
+            if (state != null)
+            {
+                TOutput? output = getter(state);
+
+                ChatState newState = modifier(state);
+                await stateManager.SetState(chatId, newState);
+
+                return output;
+            }
+            else
+            {
+                ChatState newState = new();
+                newState = modifier(newState);
+                await stateManager.SetState(chatId, newState);
+
+                return default;
+            }
         }
 
-        public async Task<bool> SetCommandString(ChatId chatId, string command)
+        public async Task<InputChainState?> GetInputChain(ChatId chatId)
+        {
+            InputChainState? Getter(ChatState state) => state.InputChain;
+
+            InputChainState? inputChain = await GetParam(chatId, Getter);
+            return inputChain;
+        }
+
+        public async Task<bool> StartInputChain(ChatId chatId, string inputChainName)
         {
             ChatState Modifier(ChatState state)
             {
                 ChatState modified = state;
-                modified.Command = command;
+
+                var inputChain = new InputChainState()
+                {
+                    Name = inputChainName,
+                    Step = 0
+                };
+                state.InputChain = inputChain;
+
                 return modified;
             }
 
@@ -67,30 +102,34 @@ namespace GenshinVybyu.Services
             return success;
         }
 
-        public async Task<bool> SetCommandString(ChatId chatId, string token, ActionArgs args)
+        public async Task<bool> NextParam<TParam>(ChatId chatId, TParam param)
         {
-            var command = new ParsedCommand()
+            InputChainState ChainStateModifier(InputChainState chainState)
             {
-                Token = token,
-                Args = args,
-                CommandPrefix = _botConf.CommandPrefix,
-                KeyAttrValuePrefix = _botConf.KeyAttrValuePrefix
-            };
-            string commandStr = command.ToString();
+                InputChainState newChainState = chainState;
 
-            bool success = await SetCommandString(chatId, commandStr);
-            return success;
-        }
+                if (newChainState.InputCache == null)
+                    newChainState.InputCache = new List<string>();
 
-        public async Task<bool> AddArg(ChatId chatId, string argStr)
-        {
+                string? paramStr = param?.ToString();
+                if (!string.IsNullOrEmpty(paramStr))
+                    newChainState.InputCache.Add(paramStr);
+
+                newChainState.Step++;
+
+                return newChainState;
+            }
+
             ChatState Modifier(ChatState state)
             {
                 ChatState modified = state;
-
-                string? command = state.Command;
-                string newCommand = $"{command} {argStr}";
-                modified.Command = newCommand;
+                InputChainState? chainState = state.InputChain;
+                
+                if (chainState != null)
+                {
+                    InputChainState newChainState = ChainStateModifier(chainState);
+                    modified.InputChain = newChainState;
+                }
 
                 return modified;
             }
@@ -99,22 +138,25 @@ namespace GenshinVybyu.Services
             return success;
         }
 
-        public async Task<bool> ClearCommandString(ChatId chatId)
+        public async Task<IList<string>?> FinishInputChain(ChatId chatId)
         {
+            IList<string>? Getter(ChatState state) => state.InputChain?.InputCache;
+
             ChatState Modifier(ChatState state)
             {
                 ChatState modified = state;
-                modified.Command = null;
+                state.InputChain = null;
                 return modified;
             }
 
-            bool success = await SetParam(chatId, Modifier);
-            return success;
+            IList<string>? inputCache = await GetAndSetParam(chatId, Getter, Modifier);
+
+            return inputCache;
         }
 
         public async Task<bool> IsSuperUser(ChatId chatId)
         {
-            bool Getter(ChatState state) => state.SuperUser == "true";
+            bool Getter(ChatState state) => state.SuperUser ?? false;
 
             bool isSuperUser = await GetParam(chatId, Getter);
             return isSuperUser;
@@ -125,7 +167,7 @@ namespace GenshinVybyu.Services
             ChatState Modifier(ChatState state)
             {
                 ChatState modified = state;
-                modified.SuperUser = "true";
+                modified.SuperUser = true;
                 return modified;
             }
 
@@ -138,7 +180,7 @@ namespace GenshinVybyu.Services
             ChatState Modifier(ChatState state)
             {
                 ChatState modified = state;
-                modified.SuperUser = "false";
+                modified.SuperUser = false;
                 return modified;
             }
 
