@@ -154,6 +154,19 @@ namespace GenshinVybyu.Services
             return inputCache;
         }
 
+        public async Task<bool> ClearChatCache(ChatId chatId)
+        {
+            ChatState Modifier(ChatState state)
+            {
+                ChatState modified = state;
+                state.InputChain = null;
+                return modified;
+            }
+
+            bool success = await SetParam(chatId, Modifier);
+            return success;
+        }
+
         public async Task<bool> IsSuperUser(ChatId chatId)
         {
             bool Getter(ChatState state) => state.SuperUser ?? false;

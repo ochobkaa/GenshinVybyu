@@ -69,7 +69,12 @@ namespace GenshinVybyu.Services
             }
 
             if (command != null)
+            {
                 await HandleAction(chatId, command, cancellationToken);
+
+                if (chainState != null)
+                    await _state.ClearChatCache(chatId);
+            }
         }
     }
 }
