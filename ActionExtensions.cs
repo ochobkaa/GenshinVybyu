@@ -1,5 +1,6 @@
 ﻿using GenshinVybyu.Services.Interfaces;
 using GenshinVybyu.Actions;
+using GenshinVybyu.Actions.InputChains;
 
 namespace GenshinVybyu
 {
@@ -11,7 +12,17 @@ namespace GenshinVybyu
 
             actionsCollection
                 .Bind<StartAction>()
-                .Bind<ProbAction>();
+                .Bind<ProbAction>()
+                .Bind<RollsAction>();
+        }
+
+        public static void MapInputChains(this IEndpointRouteBuilder builder)
+        {
+            var actionsCollection = builder.ServiceProvider.GetService<IActionsCollection>();
+
+            actionsCollection
+                .Bind<ProbInputChain>()
+                .Bind<RollsInputChain>();
         }
     }
 }

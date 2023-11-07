@@ -1,10 +1,9 @@
 ﻿using GenshinVybyu;
 using GenshinVybyu.Types;
 using GenshinVybyu.Services;
-using GenshinVybyu.Services.Interfaces;
 using GenshinVybyu.Controllers;
+using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -64,12 +63,14 @@ builder.Services.AddRedis(sensitiveData);
 // Read more about adding Newtonsoft.Json to ASP.NET Core pipeline:
 //   https://docs.microsoft.com/en-us/aspnet/core/web-api/advanced/formatting?view=aspnetcore-6.0#add-newtonsoftjson-based-json-format-support
 builder.Services
-    .AddControllers();
+    .AddControllers()
+    .AddNewtonsoftJson();
 
 var app = builder.Build();
 // Construct webhook route from the Route configuration parameter
 // It is expected that BotController has single method accepting Update
 app.MapBotWebhookRoute<BotController>(route: webhookConfiguration.Route);
 app.MapControllers();
-app.MapActions<IActionsCollection>();
+app.MapActions();
+app.MapInputChains();
 app.Run();

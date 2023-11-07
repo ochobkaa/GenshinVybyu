@@ -5,16 +5,10 @@ using Telegram.Bot.Types;
 
 namespace GenshinVybyu.Actions.Checkers
 {
-    public class RollsPrimoChecker : IArgsChecker
+    public class ProbChecker : IArgsChecker
     {
-        private bool CheckRolls(ActionArgs args)
-            => args.KwArgs?.TryGetValue("rolls", out _) ?? false;
-
-        private bool CheckPrimo(ActionArgs args)
-            => args.KwArgs?.TryGetValue("primo", out _) ?? false;
-
         public bool Check(ActionArgs args)
-            => CheckRolls(args) || CheckPrimo(args);
+            => args.KwArgs?.TryGetValue("prob", out _) ?? false;
 
         public async Task OnFalse(ActionContext context, CancellationToken cancellationToken)
         {
@@ -23,7 +17,7 @@ namespace GenshinVybyu.Actions.Checkers
 
             await output.Message(
                 chatId,
-                "onFalseRollsPrimo",
+                "onFalseProb",
                 cancellationToken,
                 addSplash: true
             );
