@@ -8,7 +8,7 @@ namespace GenshinVybyu.Actions.Checkers
     public class ProbChecker : IArgsChecker
     {
         public bool Check(ActionArgs args)
-            => args.KwArgs?.TryGetValue("prob", out _) ?? false;
+            => args.KwArgs?.ContainsKey("prob") ?? false;
 
         public async Task OnFalse(ActionContext context, CancellationToken cancellationToken)
         {

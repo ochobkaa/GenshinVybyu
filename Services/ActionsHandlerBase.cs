@@ -35,10 +35,8 @@ namespace GenshinVybyu.Services
 
         public abstract Task Handle(T obj, CancellationToken cancellationToken);
 
-        private ParsedCommand? GetChainCommand(InputChainState chainState)
+        private ParsedCommand? GetChainCommand(string chainName, int chainStep)
         {
-            string chainName = chainState.Name;
-            int chainStep = chainState.Step;
             string cPref = _conf.CommandPrefix;
             string chainCommand = $"{cPref}{chainName} {chainStep}";
 
@@ -52,27 +50,32 @@ namespace GenshinVybyu.Services
             if (action == null) return;
 
             ActionArgs args = command.Args;
-            await _executor.Exec(chatId, action.Run, args, cancellationToken);
+            await _executor.Exec(chatId, action.Name, action.Run, args, cancellationToken);
         }
 
         protected async Task HandleWithText(ChatId chatId, string mText, CancellationToken cancellationToken)
         {
-            InputChainState? chainState = await _state.GetInputChain(chatId);
+            string? chainName = await _state.GetInputChainName(chatId);
 
             ParsedCommand? command = _parser.ParseText(mText);
 
-            if (command == null && chainState != null)
+            if (command == null && chainName != null)
             {
-                command = GetChainCommand(chainState);
+                int? chainStep = await _state.GetInputChainStep(chatId);
+
+                ParsedCommand? chainCommand = GetChainCommand(chainName, chainStep ?? 0);
 
                 await _state.NextParam(chatId, mText);
+
+                if (chainCommand is not null)
+                    await HandleAction(chatId, chainCommand, cancellationToken);
             }
 
-            if (command != null)
+            else if (command != null)
             {
                 await HandleAction(chatId, command, cancellationToken);
 
-                if (chainState != null)
+                if (chainName != null)
                     await _state.ClearChatCache(chatId);
             }
         }

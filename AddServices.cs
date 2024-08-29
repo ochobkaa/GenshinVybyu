@@ -44,6 +44,7 @@ namespace GenshinVybyu
                 .AddScoped<ISplashGenerator, SplashGenerator>()
                 .AddScoped<IRollsDataFormatter, RollsDataFormatter>()
                 .AddScoped<IMessageTextReplacer, MessageTextReplacer>()
+                .AddScoped<IMessagesStore, MessagesStore>()
                 .AddScoped<IMessageBuilder, MessageBuilder>()
                 .AddScoped<IBotOutput, BotOutput>();
 
@@ -53,7 +54,8 @@ namespace GenshinVybyu
         public static IServiceCollection AddUtility(this IServiceCollection services)
         {
             services
-                .AddScoped<IHashChat, HashChat>();
+                .AddScoped<IHashChat, HashChat>()
+                .AddScoped<IRequestRepeater, RequestRepeater>();
 
             return services;
         }

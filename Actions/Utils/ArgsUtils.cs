@@ -20,20 +20,35 @@ namespace GenshinVybyu.Actions.Utils
             return val;
         }
 
-        public static int IntFromKwArgs(string key, ActionArgs args)
+        public static int? IntFromKwArgs(string key, ActionArgs args)
         {
-            args.KwArgs.TryGetValue(key, out string rollsStr);
-            int.TryParse(rollsStr, out int val);
+            if (args.KwArgs is null)
+                return null;
 
-            return val;
+            if (args.KwArgs.TryGetValue(key, out string valStr))
+            {
+                bool success = int.TryParse(valStr, out int val);
+                if (success)
+                    return val;
+            }
+
+            return null;
+            
         }
 
-        public static double DoubleFromKwArgs(string key, ActionArgs args)
+        public static double? DoubleFromKwArgs(string key, ActionArgs args)
         {
-            args.KwArgs.TryGetValue(key, out string rollsStr);
-            double.TryParse(rollsStr, out double val);
+            if (args.KwArgs is null)
+                return null;
 
-            return val;
+            if (args.KwArgs.TryGetValue(key, out string valStr))
+            {
+                bool success = double.TryParse(valStr, out double val);
+                if (success)
+                    return val;
+            }
+
+            return null;
         }
 
         public static bool FiftyFiftyFromArgs(ActionArgs args)

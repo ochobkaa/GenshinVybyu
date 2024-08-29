@@ -1,5 +1,7 @@
 ﻿using GenshinVybyu.Services.Interfaces;
+using GenshinVybyu.Types;
 using Telegram.Bot.Types;
+using Microsoft.Extensions.Options;
 
 namespace GenshinVybyu.Services
 {
@@ -8,9 +10,11 @@ namespace GenshinVybyu.Services
         public MessageActionsHandler(
             IActionsCollection actions,
             IActionExecutor executor,
+            IChatStateActions state,
             ICommandParser parser,
+            IOptions<BotConfiguration> conf,
             ILogger<MessageActionsHandler> logger
-        ) : base(actions, executor, parser, logger) { }
+        ) : base(actions, executor, state, parser, conf, logger) { }
 
         public override async Task Handle(Message message, CancellationToken cancellationToken)
         {

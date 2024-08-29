@@ -11,20 +11,20 @@ namespace GenshinVybyu.Services
     {
         private readonly ISplashGenerator _splashes;
         private readonly IMessageTextReplacer _replacer;
+        private readonly IMessagesStore _msgStore;
         private readonly BotConfiguration _botConf;
-        private readonly MessagesConfig _msgConfig;
 
         public MessageBuilder(
             ISplashGenerator splashes,
             IMessageTextReplacer replacer,
-            IOptions<BotConfiguration> botConf,
-            IOptions<MessagesConfig> msgConfig
+            IMessagesStore msgStore,
+            IOptions<BotConfiguration> botConf
         )
         {
             _splashes = splashes;
             _replacer = replacer;
+            _msgStore = msgStore;
             _botConf = botConf.Value;
-            _msgConfig = msgConfig.Value;
         }
 
         private string GetMessageText(BotMessage msg, bool addSplash)
@@ -100,8 +100,7 @@ namespace GenshinVybyu.Services
         }
 
         private BotMessage? MessageFromConfig(string messageName)
-            => _msgConfig.Messages
-                .FirstOrDefault(m => m.Name == messageName);
+            => _msgStore.MessageByName(messageName);
 
         public BuildedMessage? BuildMessage(
             string messageName,

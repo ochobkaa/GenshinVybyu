@@ -8,11 +8,13 @@ namespace GenshinVybyu.Services
 {
     public class ChatStateActions : IChatStateActions
     {
-        private delegate ChatState StateModifier(ChatState curState);
-        private delegate TOutput? ParamGetter<TOutput>(ChatState curState);
-
         private readonly IServiceProvider _provider;
         private readonly BotConfiguration _botConf;
+
+        public string ChainName => "chainname";
+        public string ChainStep => "chainstep";
+        public string Params => "params";
+        public string SuperUser => "superuser";
 
         public ChatStateActions(IServiceProvider provider, IOptions<BotConfiguration> botConf)
         {
@@ -20,184 +22,131 @@ namespace GenshinVybyu.Services
             _botConf = botConf.Value;
         }
 
-        private async Task<TOutput?> GetParam<TOutput>(ChatId chatId, ParamGetter<TOutput> getter)
+        public async Task<string?> GetInputChainName(ChatId chatId)
         {
-            var stateManager = _provider.GetService<IChatStateManager>();
-            ChatState? state = await stateManager.GetState(chatId);
+            IChatStateManager manager = _provider.GetRequiredService<IChatStateManager>();
 
-            if (state == null) return default;
-
-            TOutput? output = getter(state);
-            return output;
+            string? chainName = await manager.GetState(chatId, ChainName, v => v);
+            return chainName;
         }
 
-        private async Task<bool> SetParam(ChatId chatId, StateModifier modifier)
+        public async Task<int?> GetInputChainStep(ChatId chatId)
         {
-            var stateManager = _provider.GetService<IChatStateManager>();
-            ChatState? state = await stateManager.GetState(chatId);
+            int IntParser(string v)
+            {
+                int.TryParse(v, out int vInt);
+                return vInt;
+            };
 
-            bool success;
-            if (state == null)
-                state = new();
+            IChatStateManager manager = _provider.GetRequiredService<IChatStateManager>();
 
-            ChatState newState = modifier(state);
-            success = await stateManager.SetState(chatId, newState);
+            int step = await manager.GetState(chatId, ChainStep, IntParser);
+            return step;
+        }
+
+        public async Task<bool> StartInputChain(ChatId chatId, string chainName)
+        {
+            IChatStateManager manager = _provider.GetRequiredService<IChatStateManager>();
+
+            bool nameSuccess = await manager.SetState(chatId, ChainName, chainName);
+            bool stepSuccess = await manager.SetState(chatId, ChainStep, 0);
+            bool success = nameSuccess && stepSuccess;
 
             return success;
         }
 
-        private async Task<TOutput?> GetAndSetParam<TOutput>(
-            ChatId chatId, 
-            ParamGetter<TOutput> getter,
-            StateModifier modifier
-        )
+        public async Task<bool> NextParam(ChatId chatId, string param)
         {
-            var stateManager = _provider.GetService<IChatStateManager>();
-            ChatState? state = await stateManager.GetState(chatId);
+            IChatStateManager manager = _provider.GetRequiredService<IChatStateManager>();
 
-            if (state != null)
+            string? chainParams = await manager.GetState(chatId, Params, v => v);
+
+            bool success;
+            if (chainParams is not null)
             {
-                TOutput? output = getter(state);
-
-                ChatState newState = modifier(state);
-                await stateManager.SetState(chatId, newState);
-
-                return output;
+                string newParams = $"{chainParams} {param}";
+                success = await manager.SetState(chatId, Params, newParams);
             }
             else
             {
-                ChatState newState = new();
-                newState = modifier(newState);
-                await stateManager.SetState(chatId, newState);
-
-                return default;
-            }
-        }
-
-        public async Task<InputChainState?> GetInputChain(ChatId chatId)
-        {
-            InputChainState? Getter(ChatState state) => state.InputChain;
-
-            InputChainState? inputChain = await GetParam(chatId, Getter);
-            return inputChain;
-        }
-
-        public async Task<bool> StartInputChain(ChatId chatId, string inputChainName)
-        {
-            ChatState Modifier(ChatState state)
-            {
-                ChatState modified = state;
-
-                var inputChain = new InputChainState()
-                {
-                    Name = inputChainName,
-                    Step = 0
-                };
-                state.InputChain = inputChain;
-
-                return modified;
+                success = await manager.SetState(chatId, Params, param);
             }
 
-            bool success = await SetParam(chatId, Modifier);
             return success;
         }
 
-        public async Task<bool> NextParam<TParam>(ChatId chatId, TParam param)
+        public async Task<bool> NextChainAction(ChatId chatId)
         {
-            InputChainState ChainStateModifier(InputChainState chainState)
+            IChatStateManager manager = _provider.GetRequiredService<IChatStateManager>();
+
+            int? step = await GetInputChainStep(chatId);
+
+            if (step is not null)
             {
-                InputChainState newChainState = chainState;
+                step++;
 
-                if (newChainState.InputCache == null)
-                    newChainState.InputCache = new List<string>();
-
-                string? paramStr = param?.ToString();
-                if (!string.IsNullOrEmpty(paramStr))
-                    newChainState.InputCache.Add(paramStr);
-
-                newChainState.Step++;
-
-                return newChainState;
+                bool success = await manager.SetState(chatId, ChainStep, step);
+                return success;
             }
-
-            ChatState Modifier(ChatState state)
-            {
-                ChatState modified = state;
-                InputChainState? chainState = state.InputChain;
-                
-                if (chainState != null)
-                {
-                    InputChainState newChainState = ChainStateModifier(chainState);
-                    modified.InputChain = newChainState;
-                }
-
-                return modified;
-            }
-
-            bool success = await SetParam(chatId, Modifier);
-            return success;
-        }
-
-        public async Task<IList<string>?> FinishInputChain(ChatId chatId)
-        {
-            IList<string>? Getter(ChatState state) => state.InputChain?.InputCache;
-
-            ChatState Modifier(ChatState state)
-            {
-                ChatState modified = state;
-                state.InputChain = null;
-                return modified;
-            }
-
-            IList<string>? inputCache = await GetAndSetParam(chatId, Getter, Modifier);
-
-            return inputCache;
+            else
+                return false;
         }
 
         public async Task<bool> ClearChatCache(ChatId chatId)
         {
-            ChatState Modifier(ChatState state)
-            {
-                ChatState modified = state;
-                state.InputChain = null;
-                return modified;
-            }
+            IChatStateManager manager = _provider.GetRequiredService<IChatStateManager>();
 
-            bool success = await SetParam(chatId, Modifier);
+            bool nameSuccess = await manager.DeleteState(chatId, ChainName);
+            bool stepSuccess = await manager.DeleteState(chatId, ChainStep);
+            bool paramsSuccess = await manager.DeleteState(chatId, Params);
+            bool success = nameSuccess && stepSuccess && paramsSuccess;
+
             return success;
+        }
+
+        public async Task<string[]?> FinishInputChain(ChatId chatId)
+        {
+            IChatStateManager manager = _provider.GetRequiredService<IChatStateManager>();
+
+
+            string? argsStr = await manager.GetState(chatId, Params, v => v);
+            if (argsStr is null)
+                return null;
+
+            string[] args = argsStr.Split(" ");
+
+            bool clearSuccess = await ClearChatCache(chatId);
+
+            return args;
         }
 
         public async Task<bool> IsSuperUser(ChatId chatId)
         {
-            bool Getter(ChatState state) => state.SuperUser ?? false;
+            bool BoolParser(string v)
+            {
+                bool.TryParse(v, out bool vBool);
+                return vBool;
+            };
 
-            bool isSuperUser = await GetParam(chatId, Getter);
-            return isSuperUser;
+            IChatStateManager manager = _provider.GetRequiredService<IChatStateManager>();
+
+            bool? isSuperUser = await manager.GetState(chatId, SuperUser, BoolParser);
+            return isSuperUser ?? false;
         }
 
         public async Task<bool> EnableSuperUser(ChatId chatId)
         {
-            ChatState Modifier(ChatState state)
-            {
-                ChatState modified = state;
-                modified.SuperUser = true;
-                return modified;
-            }
+            IChatStateManager manager = _provider.GetRequiredService<IChatStateManager>();
 
-            bool success = await SetParam(chatId, Modifier);
+            bool success = await manager.SetState(chatId, SuperUser, true);
             return success;
         }
 
         public async Task<bool> DisableSuperUser(ChatId chatId)
         {
-            ChatState Modifier(ChatState state)
-            {
-                ChatState modified = state;
-                modified.SuperUser = false;
-                return modified;
-            }
+            IChatStateManager manager = _provider.GetRequiredService<IChatStateManager>();
 
-            bool success = await SetParam(chatId, Modifier);
+            bool success = await manager.SetState(chatId, SuperUser, false);
             return success;
         }
     }

@@ -6,6 +6,8 @@
 
         public string ModelDataPath { get; set; } = default!;
         public string ModelDataFilenameFormat { get; set; } = default!;
+        public int ExecutorRetryDelay { get; init; } = default!;
+        public int ExecutorRetryTimes { get; init; } = default!;
         public int RollPrimogemsCost { get; set; } = default!;
         public int CharPity { get; set; } = default!;
         public int WeaponPity { get; set; } = default!;

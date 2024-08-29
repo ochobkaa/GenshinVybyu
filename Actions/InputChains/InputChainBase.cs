@@ -1,7 +1,6 @@
 ﻿using GenshinVybyu.Actions.Interfaces;
 using GenshinVybyu.Actions.Utils;
 using GenshinVybyu.Services.Interfaces;
-using GenshinVybyu.Types;
 using Telegram.Bot.Types;
 
 namespace GenshinVybyu.Actions.InputChains
@@ -15,6 +14,11 @@ namespace GenshinVybyu.Actions.InputChains
         private IBotAction _destAction;
 
         private Dictionary<Type, int> _indexes = new();
+
+        public InputChainBase()
+        {
+            SetActions();
+        }
 
         private async Task StartChain(
             ActionContext actionContext, 
@@ -34,7 +38,12 @@ namespace GenshinVybyu.Actions.InputChains
         )
         {
             IInputChainAction action = _chainActions[step];
+            ChatId chatId = actionContext.ChatId;
+            IChatStateActions state = actionContext.State;
+
             await action.Run(actionContext, cancellationToken);
+
+            await state.NextChainAction(chatId);
         } 
 
         private async Task FinishChain(
@@ -67,7 +76,7 @@ namespace GenshinVybyu.Actions.InputChains
         {
             var action = new TInputChainAction();
             _chainActions.Add(action);
-            _indexes.Add(typeof(TInputChainAction), _chainActions.Count);
+            _indexes.Add(typeof(TInputChainAction), _chainActions.Count - 1);
         }
 
         protected void SetDestination<TDestAction>() 
@@ -93,19 +102,33 @@ namespace GenshinVybyu.Actions.InputChains
         public async Task Run(ActionContext actionContext, CancellationToken cancellationToken)
         {
             ActionArgs args = actionContext.ActionArgs;
+            ILogger logger = actionContext.Logger;
 
             if (args.Args == null || args.Args.Count == 0)
             {
+                logger.LogDebug($"Starting input chain {Name}...");
+
                 await StartChain(actionContext, cancellationToken);
+
+                await RunChainAction(0, actionContext, cancellationToken);
+
                 return;
             }
 
             if (int.TryParse(args.Args[0], out int step))
                 if (step < _chainActions.Count)
+                {
+                    logger.LogDebug($"Performing input chain {Name}, step {step}...");
+
                     await RunChainAction(step, actionContext, cancellationToken);
+                }
 
                 else
+                {
+                    logger.LogDebug($"Finishing input chain {Name}...");
+
                     await FinishChain(actionContext, cancellationToken);
+                }
         }
     }
 }

@@ -32,7 +32,7 @@ namespace GenshinVybyu.Actions.InputChains
                 KwArgs = new Dictionary<string, string>
                 {
                     {"rolls", rollsStr },
-                    {"primo", primoStr }
+                    {"primos", primoStr }
                 }
             };
             return args;

@@ -3,6 +3,7 @@ using GenshinVybyu.Types;
 using GenshinVybyu.Exceptions;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace GenshinVybyu.Services
 {
@@ -22,21 +23,14 @@ namespace GenshinVybyu.Services
             _logger.LogDebug($"Loading model: {(fiftyfifty ? "50/50" : "100%")} C{charConsts} R{weaponRefines}");
 
             string modelsPath = _botConf.ModelDataPath;
-            string[] modelFiles = Directory.GetFiles(modelsPath);
 
             string format = _botConf.ModelDataFilenameFormat;
             string filename = GetFilename(format, fiftyfifty, charConsts, weaponRefines);
+            
+            string modelFilePath = $"{modelsPath}/{filename}";
+            ModelData modelData = await LoadModelFile(modelFilePath);
 
-            bool fileIsExist = modelFiles.FirstOrDefault(mf => mf == filename) != null;
-            if (fileIsExist)
-            {
-                string modelFilePath = $"{modelsPath}/{filename}";
-                ModelData modelData = await LoadModelFile(modelFilePath);
-
-                return modelData;
-            }
-            else 
-                throw new VybyuBotException($"Model file \"{filename}\" not found in \"{modelsPath}\" directory");
+            return modelData;
         }
 
         private async Task<ModelData> LoadModelFile(string modelFilePath)
@@ -46,7 +40,15 @@ namespace GenshinVybyu.Services
 
             _logger.LogDebug($"File \"{modelFilePath}\" loaded");
 
-            var modelData = JsonConvert.DeserializeObject<ModelData>(rawModelData);
+            var settings = new JsonSerializerSettings
+            {
+                ContractResolver = new DefaultContractResolver
+                {
+                    NamingStrategy = new SnakeCaseNamingStrategy()
+                }
+            };
+
+            var modelData = JsonConvert.DeserializeObject<ModelData>(rawModelData, settings);
 
             if (modelData == null) throw new VybyuBotException($"Failed to deserialize \"{modelFilePath}\"");
 

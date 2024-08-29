@@ -2,7 +2,6 @@
 using GenshinVybyu.Types;
 using GenshinVybyu.Services;
 using GenshinVybyu.Controllers;
-using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +21,7 @@ builder.Services.Configure<WebhookConfiguration>(webhookConfigurationSection)
                 })
                 .Configure<MessagesConfig>(mc =>
                 {
+                    mc.RollsDataFormat = messagesConfig.RollsDataFormat;
                     mc.Splashes = messagesConfig.Splashes;
                     mc.Messages = messagesConfig.Messages;
                 });
@@ -41,6 +41,16 @@ builder.Services.AddHttpClient("telegram_bot_client")
                     return new TelegramBotClient(options, httpClient);
                 });
 
+// There are several strategies for completing asynchronous tasks during startup.
+// Some of them could be found in this article https://andrewlock.net/running-async-tasks-on-app-startup-in-asp-net-core-part-1/
+// We are going to use IHostedService to add and later remove Webhook
+builder.Services.AddHostedService<ConfigureWebhook>();
+
+builder.Services.AddLogging()
+    .AddRedis(sensitiveData);
+
+builder.Services.AddNgrokTunnel();
+
 // Dummy business-logic services
 
 builder.Services
@@ -50,14 +60,6 @@ builder.Services
     .AddBotOutput()
     .AddUtility();
 
-// There are several strategies for completing asynchronous tasks during startup.
-// Some of them could be found in this article https://andrewlock.net/running-async-tasks-on-app-startup-in-asp-net-core-part-1/
-// We are going to use IHostedService to add and later remove Webhook
-builder.Services.AddHostedService<ConfigureWebhook>();
-
-builder.Services.AddLogging();
-builder.Services.AddRedis(sensitiveData);
-
 // The Telegram.Bot library heavily depends on Newtonsoft.Json library to deserialize
 // incoming webhook updates and send serialized responses back.
 // Read more about adding Newtonsoft.Json to ASP.NET Core pipeline:
@@ -65,6 +67,10 @@ builder.Services.AddRedis(sensitiveData);
 builder.Services
     .AddControllers()
     .AddNewtonsoftJson();
+
+builder.Logging
+    .ClearProviders()
+    .AddConsole();
 
 var app = builder.Build();
 // Construct webhook route from the Route configuration parameter

@@ -18,26 +18,35 @@ namespace GenshinVybyu.Services
 
         private int RollsFromPrimogems(int primogems) => primogems / _conf.RollPrimogemsCost;
 
-        private static Polynome GetPolynome(ModelData modelData, int rolls)
+        private static Polynome? GetPolynome(ModelData modelData, int rolls)
         {
             var isInRange = (Polynome pol) => pol.Start <= rolls && pol.End > rolls;
 
-            Polynome polynome = modelData.Polynomes.First(isInRange);
+            Polynome? polynome = modelData.Polynomes.FirstOrDefault(isInRange);
             return polynome;
         }
 
         private static double CalcPolynome(Polynome polynome, int rolls)
         {
             double val = 0;
-            foreach (double coef in polynome.Coef) val = rolls * val + coef;
+            double[] coefs = polynome.Coef;
+            int pow = coefs.Length - 1;
+            for (int i = pow; i >= 0; i--) 
+                val = rolls * val + coefs[i];
 
             return val;
         }
 
         private static double CalcProb(ModelData modelData, int rolls)
         {
-            Polynome polynome = GetPolynome(modelData, rolls);
-            double prob = CalcPolynome(polynome, rolls);
+            Polynome? polynome = GetPolynome(modelData, rolls);
+
+            double prob = 0.0;
+            if (polynome is not null)
+                prob = CalcPolynome(polynome, rolls);
+
+            else
+                prob = 1.0;
 
             return prob;
         }
@@ -56,21 +65,25 @@ namespace GenshinVybyu.Services
 
         public async Task<int> GetRolls(double prob, bool fiftyfifty, int consts, int refines)
         {
-            if (prob > 1 && prob < 0) 
+            if (prob > 1 || prob < 0) 
                 throw new VybyuBotException("Probability value is greater than 1 or negative");
 
             ModelData modelData = await _models.GetModelData(fiftyfifty, consts, refines);
 
             int start = 0;
             int end = modelData.Polynomes.Last().End;
-            while (end - start > 1)
+
+            Console.WriteLine($"Start {start}, End {end}");
+            while (start < end)
             {
-                int pos = (end + start) / 2;
+                int pos = start + (end - start) / 2;
                 double posProb = CalcProb(modelData, pos);
 
-                if (posProb < prob) start = pos;
+                if (posProb < prob) 
+                    start = pos + 1;
 
-                else end = pos;
+                else 
+                    end = pos;
             }
 
             return end;

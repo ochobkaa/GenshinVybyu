@@ -7,6 +7,7 @@ namespace GenshinVybyu.Services.Interfaces
     {
         public Task Exec(
             ChatId chatId,
+            string actionName,
             Func<ActionContext, CancellationToken, Task> actionCb,
             ActionArgs args,
             CancellationToken cancellationToken

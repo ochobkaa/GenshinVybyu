@@ -11,7 +11,7 @@ namespace GenshinVybyu.Actions.Checkers
             => args.KwArgs?.TryGetValue("rolls", out _) ?? false;
 
         private bool CheckPrimo(ActionArgs args)
-            => args.KwArgs?.TryGetValue("primo", out _) ?? false;
+            => args.KwArgs?.TryGetValue("primos", out _) ?? false;
 
         public bool Check(ActionArgs args)
             => CheckRolls(args) || CheckPrimo(args);

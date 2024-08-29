@@ -3,6 +3,7 @@ using GenshinVybyu.Services.Interfaces;
 using GenshinVybyu.Types;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace GenshinVybyu.Services
 {
@@ -18,8 +19,15 @@ namespace GenshinVybyu.Services
         private string GetCommandToken(string rawTextCommand)
         {
             int commandEndPos = rawTextCommand.IndexOf(" ");
-            string commandToken = rawTextCommand[..commandEndPos];
-            return commandToken;
+            if (commandEndPos > -1)
+            {
+                string commandToken = rawTextCommand[..commandEndPos];
+                return commandToken;
+            }
+            else
+            {
+                return rawTextCommand;
+            }
         }
 
         private static List<string> GetArgs(string argValPrefix, string[] argStrs)
@@ -31,25 +39,38 @@ namespace GenshinVybyu.Services
 
         private static Dictionary<string, string> GetKWArgs(string argValPrefix, string[] argStrs)
         {
-            Dictionary<string, string> kwArgs = (Dictionary<string, string>)
-                argStrs.Where(s => s.Contains(argValPrefix))
-                    .Select(s =>
-                    {
-                        string[] spl = s.Split(argValPrefix);
-                        var kwPair = new KeyValuePair<string, string>(spl[0], spl[1]);
-                        return kwPair;
-                    });
+            Dictionary<string, string> kwArgs = new();
+            foreach (string argStr in argStrs)
+            {
+                if (argStr.Contains(argValPrefix))
+                {
+                    string[] split = argStr.Split(argValPrefix);
+
+                    string argName = split[0];
+                    string argVal = split[1];
+                    kwArgs[argName] = argVal;
+                }
+            }
 
             return kwArgs;
         }
 
         private ActionArgs? GetActionArgs(string rawTextCommand)
         {
-            int argsStartPos = rawTextCommand.IndexOf(" ") + 1;
-            string rawArgs = rawTextCommand[argsStartPos..];
+            if (string.IsNullOrEmpty(rawTextCommand))
+                return null;
 
-            string[] argStrs = Regex.Split(rawArgs, "(?=(?:[^\"]* \"[^\"]*\")*[^\"]*$)");
+            int argsStartPos = rawTextCommand.IndexOf(" ");
+            if (argsStartPos == -1)
+                return null;
+
+            string rawArgs = rawTextCommand[(argsStartPos + 1)..];
+
+            string[] argStrs = rawArgs.Split(" ");
+
             argStrs = argStrs.Where(s => !string.IsNullOrEmpty(s)).ToArray();
+            if (argStrs.Length == 0)
+                return null;
 
             string argValPrefix = _conf.KeyAttrValuePrefix;
             List<string> args = GetArgs(argValPrefix, argStrs);

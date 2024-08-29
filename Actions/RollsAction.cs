@@ -22,7 +22,7 @@ namespace GenshinVybyu.Actions
             => new()
             {
                 { "{rolls}", $"{rolls}" },
-                { "{prob}", $"{prob}" }
+                { "{prob}", $"{prob:F2}" }
             };
 
         protected override async Task OnRun(ActionContext actionContext, CancellationToken cancellationToken)
@@ -36,7 +36,8 @@ namespace GenshinVybyu.Actions
             int consts = ArgsUtils.ConstsFromArgs(args);
             int refines = ArgsUtils.RefinesFromArgs(args);
 
-            double prob = ArgsUtils.DoubleFromKwArgs("prob", args);
+            double prob100 = ArgsUtils.DoubleFromKwArgs("prob", args) ?? 0.0;
+            double prob = prob100 / 100;
 
             int rolls = await calc.GetRolls(prob, fiftyFifty, consts, refines);
 
@@ -46,7 +47,7 @@ namespace GenshinVybyu.Actions
                 Consts = consts,
                 Refines = refines
             };
-            Dictionary<string, string> replaces = GetReplaces(rolls, prob);
+            Dictionary<string, string> replaces = GetReplaces(rolls, prob100);
 
             await output.Message(
                 chatId, "rolls",

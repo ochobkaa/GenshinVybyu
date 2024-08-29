@@ -7,6 +7,7 @@ namespace GenshinVybyu.Actions.Utils
 {
     public class ActionContext
     {
+        public string ActionName { get; init; }
         public IBotOutput Output { get; init; }
         public IModelCalc ModelCalc { get; init; }
         public IChatStateActions State { get; init; }
